@@ -36,7 +36,7 @@
   <script>
     const allowedLat = 30.0656648;
     const allowedLon = 31.2081144;
-    const maxDist = 500; // بالأمتار
+    const maxDist = 500;
     const statusEl = document.getElementById("status");
     const formEl = document.getElementById("checkinForm");
     const scriptUrl = "https://script.google.com/macros/s/AKfycbwURU959SeKzxljKGa_NW-Ry7b3bAZLyZx7lVQRJRmcGVv-MFZOUzo89FZ6Z-_4HZnJfw/exec";
@@ -64,14 +64,15 @@
         document.getElementById("lat").value = lat;
         document.getElementById("lon").value = lon;
       } else {
-        statusEl.textContent = `❌ لا يمكنك التسجيل لأنك خارج النطاق المسموح (${Math.round(dist)} متر).`;
+        statusEl.textContent = `❌ لا يمكنك التسجيل لأنك خارج النطاق (${Math.round(dist)} متر).`;
       }
     }, () => {
       statusEl.textContent = "❌ لم يتم السماح بالوصول إلى الموقع.";
     });
 
     formEl.addEventListener("submit", function(e) {
-      e.preventDefault();
+      e.preventDefault(); // يمنع التوجيه
+
       const formData = new FormData(formEl);
       fetch(scriptUrl, {
         method: "POST",
