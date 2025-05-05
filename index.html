@@ -4,16 +4,27 @@
   <meta charset="UTF-8">
   <title>تسجيل حضور التدريب - تحقق من الموقع</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f0f0f0; direction: rtl; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      background-color: #f0f0f0;
+      direction: rtl;
+    }
     #checkinForm { display: none; }
-    input, button { padding: 10px; margin: 10px; width: 70%; font-size: 16px; }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      width: 70%;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
   <h2>نموذج تسجيل الحضور</h2>
   <p id="status">جاري التحقق من موقعك...</p>
 
-  <form id="checkinForm" action="https://script.google.com/macros/s/AKfycbwURU959SeKzxljKGa_NW-Ry7b3bAZLyZx7lVQRJRmcGVv-MFZOUzo89FZ6Z-_4HZnJfw/exec" method="POST" target="_blank">
+  <form id="checkinForm">
     <input type="text" name="name" placeholder="الاسم" required><br>
     <input type="text" name="nid" placeholder="الرقم القومي" required><br>
     <input type="text" name="niaba" placeholder="النيابة" required><br>
@@ -26,19 +37,20 @@
     const allowedLat = 30.0656648;
     const allowedLon = 31.2081144;
     const maxDist = 500; // بالأمتار
-
     const statusEl = document.getElementById("status");
     const formEl = document.getElementById("checkinForm");
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbwURU959SeKzxljKGa_NW-Ry7b3bAZLyZx7lVQRJRmcGVv-MFZOUzo89FZ6Z-_4HZnJfw/exec";
 
     function toRad(x) { return x * Math.PI / 180; }
     function getDistance(lat1, lon1, lat2, lon2) {
       const R = 6371000;
       const dLat = toRad(lat2 - lat1);
       const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat/2) ** 2 +
+      const a = Math.sin(dLat / 2) ** 2 +
                 Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLon/2) ** 2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                Math.sin(dLon / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
     }
 
     navigator.geolocation.getCurrentPosition(pos => {
@@ -56,6 +68,23 @@
       }
     }, () => {
       statusEl.textContent = "❌ لم يتم السماح بالوصول إلى الموقع.";
+    });
+
+    formEl.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const formData = new FormData(formEl);
+      fetch(scriptUrl, {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        statusEl.textContent = data.result;
+        formEl.style.display = "none";
+      })
+      .catch(() => {
+        statusEl.textContent = "حدث خطأ أثناء الإرسال.";
+      });
     });
   </script>
 </body>
