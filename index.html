@@ -2,30 +2,33 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تسجيل حضور التدريب</title>
+  <title>تسجيل حضور التدريب - تحقق من الموقع</title>
   <style>
-    body { font-family: 'Arial', sans-serif; text-align: center; margin-top: 50px; background-color: #f9f9f9; direction: rtl; }
-    input, select { padding: 10px; margin: 10px; width: 80%; font-size: 16px; }
-    button { padding: 10px 20px; font-size: 16px; }
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f0f0f0; direction: rtl; }
+    #checkinForm { display: none; }
+    input, button { padding: 10px; margin: 10px; width: 70%; font-size: 16px; }
   </style>
 </head>
 <body>
   <h2>نموذج تسجيل الحضور</h2>
-  <input type="text" id="name" placeholder="الاسم" required />
-  <input type="text" id="nid" placeholder="الرقم القومي" required />
-  <input type="text" id="niaba" placeholder="النيابة" required />
-  <br>
-  <button id="submitBtn" disabled>تسجيل الحضور</button>
   <p id="status">جاري التحقق من موقعك...</p>
 
-  <script>
-    const submitBtn = document.getElementById("submitBtn");
-    const statusEl = document.getElementById("status");
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbwURU959SeKzxljKGa_NW-Ry7b3bAZLyZx7lVQRJRmcGVv-MFZOUzo89FZ6Z-_4HZnJfw/exec";
+  <form id="checkinForm" action="https://script.google.com/macros/s/AKfycbwURU959SeKzxljKGa_NW-Ry7b3bAZLyZx7lVQRJRmcGVv-MFZOUzo89FZ6Z-_4HZnJfw/exec" method="POST" target="_blank">
+    <input type="text" name="name" placeholder="الاسم" required><br>
+    <input type="text" name="nid" placeholder="الرقم القومي" required><br>
+    <input type="text" name="niaba" placeholder="النيابة" required><br>
+    <input type="hidden" name="lat" id="lat">
+    <input type="hidden" name="lon" id="lon">
+    <button type="submit">تسجيل الحضور</button>
+  </form>
 
+  <script>
     const allowedLat = 30.0656648;
     const allowedLon = 31.2081144;
-    const maxDist = 500;
+    const maxDist = 500; // بالأمتار
+
+    const statusEl = document.getElementById("status");
+    const formEl = document.getElementById("checkinForm");
 
     function toRad(x) { return x * Math.PI / 180; }
     function getDistance(lat1, lon1, lat2, lon2) {
@@ -45,31 +48,11 @@
 
       if (dist <= maxDist) {
         statusEl.textContent = "✅ يمكنك الآن تسجيل الحضور.";
-        submitBtn.disabled = false;
-
-        submitBtn.onclick = () => {
-          const name = document.getElementById("name").value.trim();
-          const nid = document.getElementById("nid").value.trim();
-          const niaba = document.getElementById("niaba").value.trim();
-
-          if (!name || !nid || !niaba) {
-            alert("يرجى ملء جميع البيانات");
-            return;
-          }
-
-          fetch(scriptUrl, {
-            method: "POST",
-            body: JSON.stringify({ name, nid, niaba, lat, lon }),
-            headers: { "Content-Type": "application/json" },
-          })
-          .then(res => res.json())
-          .then(data => {
-            statusEl.textContent = data.result;
-            submitBtn.disabled = true;
-          });
-        };
+        formEl.style.display = "block";
+        document.getElementById("lat").value = lat;
+        document.getElementById("lon").value = lon;
       } else {
-        statusEl.textContent = `❌ أنت بعيد جدًا (${Math.round(dist)} متر). لا يمكن تسجيل الحضور.`;
+        statusEl.textContent = `❌ لا يمكنك التسجيل لأنك خارج النطاق المسموح (${Math.round(dist)} متر).`;
       }
     }, () => {
       statusEl.textContent = "❌ لم يتم السماح بالوصول إلى الموقع.";
